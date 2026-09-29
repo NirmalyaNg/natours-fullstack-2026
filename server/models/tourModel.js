@@ -8,8 +8,8 @@ const tourSchema = new mongoose.Schema(
       required: [true, 'A tour must have a name'],
       unique: true,
       trim: true,
-      minlength: [10, 'A tour name must have atleast 10 characters'],
-      maxlength: [40, 'A tour can have a maximum of 40 characters'],
+      minLength: [10, 'A tour name must have atleast 10 characters'],
+      maxLength: [40, 'A tour can have a maximum of 40 characters'],
     },
     duration: {
       type: Number,
@@ -76,6 +76,12 @@ const tourSchema = new mongoose.Schema(
     },
     startDates: [Date],
     slug: String,
+    guides: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
     startLocation: {
       // GeoJSON
       type: {
