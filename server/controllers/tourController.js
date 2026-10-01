@@ -155,3 +155,64 @@ exports.getTourStats = async function (req, res, next) {
     });
   }
 };
+
+exports.getMonthlyTourPlan = async function (req, res, next) {
+  try {
+    const year = Number(req.params.year);
+    if (!Number.isInteger(year)) {
+      return res.status(400).json({
+        status: 'fail',
+        error: 'Please provide a valid year',
+      });
+    }
+    const plan = await Tour.aggregate([
+      {
+        $unwind: '$startDates',
+      },
+      {
+        $match: {
+          startDates: {
+            $gte: new Date(year, 0, 1),
+            $lte: new Date(year, 11, 31),
+          },
+        },
+      },
+      {
+        $group: {
+          _id: { $month: '$startDates' },
+          numTourStarts: { $sum: 1 },
+          tours: {
+            $push: '$name',
+          },
+        },
+      },
+      {
+        $addFields: {
+          month: '$_id',
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+        },
+      },
+      {
+        $sort: {
+          numTourStarts: -1,
+          month: 1,
+        },
+      },
+    ]);
+    res.status(200).json({
+      status: 'success',
+      data: {
+        plan,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      error: error.message,
+    });
+  }
+};
