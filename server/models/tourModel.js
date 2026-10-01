@@ -128,6 +128,12 @@ const tourSchema = new mongoose.Schema(
   },
 );
 
+// Virtual property for duration in weeks
+tourSchema.virtual('durationWeeks').get(function () {
+  if (this.duration === undefined) return undefined; // Is duration is not queried for tours, we return undefined so that durationWeeks is not present in response
+  return Math.round((this.duration / 7) * 10) / 10;
+});
+
 // Create slug from tour name
 tourSchema.pre('save', function () {
   if (this.isModified('name')) {
