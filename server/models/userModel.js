@@ -1,3 +1,4 @@
+const crypto = require('node:crypto');
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
@@ -55,6 +56,9 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: 'default.jpg',
     },
+    passwordResetToken: String,
+    passwordResetTokenExpires: Date,
+    passwordChangedAt: Date,
   },
   {
     timestamps: true,
@@ -96,6 +100,15 @@ userSchema.methods.generateRefreshToken = function () {
 // Compare plain password and hashed password
 userSchema.methods.verifyPassword = async function (plainPassword) {
   return await bcrypt.compare(plainPassword, this.password);
+};
+
+// Generate password reset token
+userSchema.methods.generatePasswordResetToken = function () {
+  const passwordResetToken = crypto.randomBytes(30).toString('hex');
+  const hashedPasswordResetToken = crypto.createHash('sha256').update(passwordResetToken).digest('hex');
+  this.passwordResetToken = hashedPasswordResetToken;
+  this.passwordResetTokenExpires = Date.now() + 10 * 60 * 1000;
+  return passwordResetToken;
 };
 
 const User = mongoose.model('User', userSchema);
