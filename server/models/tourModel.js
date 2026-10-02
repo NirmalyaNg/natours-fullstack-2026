@@ -134,6 +134,26 @@ tourSchema.virtual('durationWeeks').get(function () {
   return Math.round((this.duration / 7) * 10) / 10;
 });
 
+// Filter out secret tours for all queries starting with find
+tourSchema.pre(/^find/, function () {
+  this.find({
+    isSecret: {
+      $ne: true,
+    },
+  });
+});
+
+// Filter out secret tours for aggregations
+tourSchema.pre('aggregate', function () {
+  this.pipeline().unshift({
+    $match: {
+      isSecret: {
+        $ne: true,
+      },
+    },
+  });
+});
+
 // Create slug from tour name
 tourSchema.pre('save', function () {
   if (this.isModified('name')) {
