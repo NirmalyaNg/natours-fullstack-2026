@@ -5,6 +5,12 @@ const tourRouter = require('./routes/tourRoutes');
 const globalErrorHandler = require('./controllers/errorController');
 const AppError = require('./utils/appError');
 
+// Handle uncaught exception
+process.on('uncaughtException', (error) => {
+  console.log('Uncaught exception: Error: ', error);
+  process.exit(1);
+});
+
 const app = express();
 
 app.set('query parser', 'extended');

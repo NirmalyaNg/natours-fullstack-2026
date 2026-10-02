@@ -4,9 +4,9 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "dev": "nodemon server.js",
+    "dev": "cross-env NODE_ENV=development nodemon server.js",
     "start": "node server.js",
-    "start:prod": "NODE_ENV=production node server.js"
+    "start:prod": "cross-env NODE_ENV=production node server.js"
   },
   "author": "Nirmalya Ganguly",
   "license": "ISC",
@@ -20,5 +20,8 @@
     "morgan": "^1.12.1",
     "slugify": "^1.6.9",
     "validator": "^13.15.35"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0"
   }
 }
