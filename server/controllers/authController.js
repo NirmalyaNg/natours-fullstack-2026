@@ -11,11 +11,15 @@ exports.protect = async function (req, res, next) {
   }
   const accessToken = req.headers.authorization.split('Bearer ')[1];
   const decoded = jwt.verify(accessToken, process.env.JWT_ACCESS_TOKEN_SECRET);
-  const existingUser = await User.findById(decoded.id).select('+password');
+  const existingUser = await User.findById(decoded.id);
   if (!existingUser) {
     return next(new AppError('User no longer exists', 401));
   }
   // Check if user has changed password after token was generated
+  const hasPasswordChangedAfter = existingUser.passwordChangedAfter(decoded.iat * 1000);
+  if (hasPasswordChangedAfter) {
+    return next(new AppError('User has changed password recently. Please login again.', 401));
+  }
   req.user = existingUser;
   next();
 };
@@ -81,6 +85,10 @@ exports.refresh = async function (req, res, next) {
   const existingUser = await User.findById(decoded.id);
   if (!existingUser) {
     return next(new AppError('User no longer exists.', 401));
+  }
+  // Check if user changed password after refresh token was generated
+  if (existingUser.passwordChangedAfter(decoded.iat * 1000)) {
+    return next(new AppError('Password was changed. Please login again.', 401));
   }
 
   generateAndSendTokens(existingUser, res);

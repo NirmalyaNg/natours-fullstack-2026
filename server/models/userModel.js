@@ -83,6 +83,13 @@ userSchema.pre('save', async function () {
   }
 });
 
+// Update passwordChangedAt when password is changed except signup
+userSchema.pre('save', function () {
+  if (this.isModified('password') && !this.isNew) {
+    this.passwordChangedAt = Date.now() - 2000;
+  }
+});
+
 // Generate access token
 userSchema.methods.generateAccessToken = function () {
   return jwt.sign({ id: this._id }, process.env.JWT_ACCESS_TOKEN_SECRET, {
@@ -109,6 +116,15 @@ userSchema.methods.generatePasswordResetToken = function () {
   this.passwordResetToken = hashedPasswordResetToken;
   this.passwordResetTokenExpires = Date.now() + 10 * 60 * 1000;
   return passwordResetToken;
+};
+
+// Check if user has changed password after token was generated
+userSchema.methods.passwordChangedAfter = function (tokenIssuedAtMs) {
+  if (this.passwordChangedAt) {
+    const passwordChangedAtMs = this.passwordChangedAt.getTime();
+    return passwordChangedAtMs > tokenIssuedAtMs;
+  }
+  return false;
 };
 
 const User = mongoose.model('User', userSchema);
