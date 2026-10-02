@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { refreshTokenExpiryDays } = require('../config/auth');
 
 const userSchema = new mongoose.Schema(
   {
@@ -53,8 +56,47 @@ const userSchema = new mongoose.Schema(
       default: 'default.jpg',
     },
   },
-  { timestamps: true },
+  {
+    timestamps: true,
+    toJSON: {
+      virtuals: true,
+      transform: function (doc, ret) {
+        delete ret._id;
+        delete ret.password;
+        delete ret.isActive;
+        delete ret.__v;
+        return ret;
+      },
+    },
+  },
 );
+
+// Hash plain text password
+userSchema.pre('save', async function () {
+  if (this.isModified('password')) {
+    this.password = await bcrypt.hash(this.password, 10);
+    this.passwordConfirm = undefined;
+  }
+});
+
+// Generate access token
+userSchema.methods.generateAccessToken = function () {
+  return jwt.sign({ id: this._id }, process.env.JWT_ACCESS_TOKEN_SECRET, {
+    expiresIn: process.env.JWT_ACCESS_TOKEN_EXPIRES || '1h',
+  });
+};
+
+// Generate refresh token
+userSchema.methods.generateRefreshToken = function () {
+  return jwt.sign({ id: this._id }, process.env.JWT_REFRESH_TOKEN_SECRET, {
+    expiresIn: `${refreshTokenExpiryDays}d`,
+  });
+};
+
+// Compare plain password and hashed password
+userSchema.methods.verifyPassword = async function (plainPassword) {
+  return await bcrypt.compare(plainPassword, this.password);
+};
 
 const User = mongoose.model('User', userSchema);
 
