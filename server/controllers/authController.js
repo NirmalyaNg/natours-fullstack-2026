@@ -9,13 +9,22 @@ exports.protect = async function (req, res, next) {
   }
   const accessToken = req.headers.authorization.split('Bearer ')[1];
   const decoded = jwt.verify(accessToken, process.env.JWT_ACCESS_TOKEN_SECRET);
-  const existingUser = await User.findById(decoded.id);
+  const existingUser = await User.findById(decoded.id).select('+password');
   if (!existingUser) {
     return next(new AppError('User no longer exists', 401));
   }
   // Check if user has changed password after token was generated
   req.user = existingUser;
   next();
+};
+
+exports.authorize = function (...roles) {
+  return function (req, res, next) {
+    if (!roles.includes(req.user?.role)) {
+      return next(new AppError('You are not authorized to perform this action.', 403));
+    }
+    next();
+  };
 };
 
 function generateAndSendTokens(user, res, statusCode = 200) {
@@ -31,7 +40,7 @@ function generateAndSendTokens(user, res, statusCode = 200) {
   res.status(statusCode).json({
     status: 'success',
     data: {
-      token: accessToken,
+      accessToken,
     },
   });
 }
@@ -58,5 +67,19 @@ exports.login = async function (req, res, next) {
   if (!existingUser || !(await existingUser.verifyPassword(password))) {
     return next(new AppError('Invalid credentials', 401));
   }
+  generateAndSendTokens(existingUser, res);
+};
+
+exports.refresh = async function (req, res, next) {
+  const refreshToken = req.cookies.refreshToken;
+  if (!refreshToken) {
+    return next(new AppError('Unauthenticated. Please login.', 401));
+  }
+  const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_TOKEN_SECRET);
+  const existingUser = await User.findById(decoded.id);
+  if (!existingUser) {
+    return next(new AppError('User no longer exists.', 401));
+  }
+
   generateAndSendTokens(existingUser, res);
 };

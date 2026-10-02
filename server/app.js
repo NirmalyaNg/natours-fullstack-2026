@@ -11,6 +11,7 @@ const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 const globalErrorHandler = require('./controllers/errorController');
 const AppError = require('./utils/appError');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.set('query parser', 'extended');
 // Middlewares
 app.use(express.json());
 app.use(cors());
+app.use(cookieParser());
 
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
