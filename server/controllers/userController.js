@@ -31,3 +31,12 @@ exports.updateMyProfile = async function (req, res, next) {
     },
   });
 };
+
+exports.deleteMe = async function (req, res, next) {
+  const user = await User.findByIdAndUpdate(req.user.id, { isActive: false });
+  if (!user) {
+    return next(new AppError('User no longer exists.', 401));
+  }
+  res.clearCookie('refreshToken');
+  res.status(204).send();
+};

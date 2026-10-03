@@ -1,3 +1,9 @@
+// Handle uncaught exception
+process.on('uncaughtException', (error) => {
+  console.log('Uncaught exception: Error: ', error);
+  process.exit(1);
+});
+
 const dotenv = require('dotenv');
 dotenv.config();
 require('./config/db');
