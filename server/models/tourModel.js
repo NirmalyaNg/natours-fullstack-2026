@@ -130,6 +130,13 @@ const tourSchema = new mongoose.Schema(
 
 const guidesPopulate = { path: 'guides', select: 'name email' };
 
+// Confifure virtual property reviews on tour schema
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  localField: '_id',
+  foreignField: 'tour',
+});
+
 // Populate tour guides for queries starting with find
 tourSchema.pre(/^find/, function () {
   this.populate(guidesPopulate);
