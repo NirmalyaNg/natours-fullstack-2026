@@ -40,6 +40,9 @@ const reviewSchema = new mongoose.Schema(
   },
 );
 
+// Allow one review per tour for one user
+reviewSchema.index({ user: 1, tour: 1 }, { unique: true });
+
 const tourAndUserPopulates = [
   // { path: 'tour', select: 'name price' },
   { path: 'user', select: 'name email' },
