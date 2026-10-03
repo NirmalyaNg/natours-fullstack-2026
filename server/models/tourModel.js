@@ -128,6 +128,22 @@ const tourSchema = new mongoose.Schema(
   },
 );
 
+const guidesPopulate = { path: 'guides', select: 'name email' };
+
+// Populate tour guides for queries starting with find
+tourSchema.pre(/^find/, function () {
+  this.populate(guidesPopulate);
+});
+
+tourSchema.post('save', async function (doc) {
+  await doc.populate(guidesPopulate);
+});
+
+// Populate tour guides for tour creation / update since both use .save/.create
+tourSchema.pre(/^find/, function () {
+  this.populate(this.model.guidesPopulate);
+});
+
 // Virtual property for duration in weeks
 tourSchema.virtual('durationWeeks').get(function () {
   if (this.duration === undefined) return undefined; // Is duration is not queried for tours, we return undefined so that durationWeeks is not present in response
