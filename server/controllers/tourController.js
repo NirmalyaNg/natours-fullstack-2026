@@ -1,6 +1,6 @@
 const Tour = require('../models/tourModel');
-const ApiFeatures = require('../utils/apiFeatures');
 const AppError = require('../utils/appError');
+const { getAll, createOne, updateOne, deleteOne, getOne } = require('./handlerFactory');
 
 exports.top5Cheap = function (req, res, next) {
   req.queryDefaults = {
@@ -9,70 +9,6 @@ exports.top5Cheap = function (req, res, next) {
     page: '1',
   };
   next();
-};
-
-exports.getAllTours = async function (req, res, next) {
-  const apiFeatures = new ApiFeatures(Tour.find(), { ...req.query, ...req.queryDefaults })
-    .filter()
-    .sort()
-    .paginate()
-    .selectFields();
-  const tours = await apiFeatures.dbQuery;
-
-  res.status(200).json({
-    status: 'success',
-    results: tours.length,
-    data: {
-      tours,
-    },
-  });
-};
-
-exports.getTour = async function (req, res, next) {
-  const tour = await Tour.findById(req.params.id).populate('reviews');
-  if (!tour) {
-    return next(new AppError(`Tour with id: ${req.params.id} not found!`, 404));
-  }
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour,
-    },
-  });
-};
-
-exports.createTour = async function (req, res, next) {
-  const newTour = await Tour.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data: {
-      tour: newTour,
-    },
-  });
-};
-
-exports.updateTour = async function (req, res, next) {
-  const tour = await Tour.findById(req.params.id);
-  if (!tour) {
-    return next(new AppError(`Tour with id: ${req.params.id} not found!`, 404));
-  }
-
-  tour.set(req.body);
-  const updatedTour = await tour.save();
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour: updatedTour,
-    },
-  });
-};
-
-exports.deleteTour = async function (req, res, next) {
-  const tour = await Tour.findByIdAndDelete(req.params.id);
-  if (!tour) {
-    return next(new AppError(`Tour with id: ${req.params.id} not found!`, 404));
-  }
-  res.status(204).send();
 };
 
 exports.getTourStats = async function (req, res, next) {
@@ -177,3 +113,9 @@ exports.getMonthlyTourPlan = async function (req, res, next) {
     },
   });
 };
+
+exports.getAllTours = getAll(Tour);
+exports.createTour = createOne(Tour);
+exports.updateTour = updateOne(Tour);
+exports.deleteTour = deleteOne(Tour);
+exports.getTour = getOne(Tour, [{ path: 'reviews' }]);

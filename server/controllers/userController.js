@@ -1,5 +1,6 @@
 const User = require('../models/userModel');
 const AppError = require('../utils/appError');
+const { getOne, getAll, createOne, updateOne, deleteOne } = require('./handlerFactory');
 
 function filterUpdates(updates = {}, allowedUpdates = []) {
   const filteredUpdates = {};
@@ -40,3 +41,9 @@ exports.deleteMe = async function (req, res, next) {
   res.clearCookie('refreshToken');
   res.status(204).send();
 };
+
+exports.getUser = getOne(User);
+exports.getAllUsers = getAll(User);
+exports.createUser = createOne(User);
+exports.updateUser = updateOne(User);
+exports.deleteUser = deleteOne(User);
