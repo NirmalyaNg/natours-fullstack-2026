@@ -154,3 +154,22 @@ exports.resetPassword = async function (req, res, next) {
   await existingUser.save();
   generateAndSendTokens(existingUser, res);
 };
+
+exports.updateMyPassword = async function (req, res, next) {
+  const { currentPassword, newPassword, newPasswordConfirm } = req.body || {};
+  if (!currentPassword || !newPassword || !newPasswordConfirm) {
+    return next(new AppError('Current password, new password and new password confirm are required', 400));
+  }
+  const existingUser = await User.findById(req.user.id).select('+password');
+  if (!existingUser) {
+    return next(new AppError('User no longer exists', 401));
+  }
+  const passwordsMatch = await existingUser.verifyPassword(currentPassword);
+  if (!passwordsMatch) {
+    return next(new AppError('Your current password is incorrect. Please provide correct password.', 400));
+  }
+  existingUser.password = newPassword;
+  existingUser.passwordConfirm = newPasswordConfirm;
+  await existingUser.save();
+  generateAndSendTokens(existingUser, res);
+};

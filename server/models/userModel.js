@@ -69,6 +69,7 @@ const userSchema = new mongoose.Schema(
         delete ret.password;
         delete ret.isActive;
         delete ret.__v;
+        delete ret.passwordChangedAt;
         return ret;
       },
     },
