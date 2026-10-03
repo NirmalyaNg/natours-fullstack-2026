@@ -18,6 +18,8 @@ router.get(
   authController.authorize('admin', 'guide', 'lead-guide'),
   tourController.getMonthlyTourPlan,
 );
+router.get('/tours-within/:distance/center/:latlong/unit/:unit', tourController.getToursWithin);
+router.get('/tour-distances/center/:latlong/unit/:unit', tourController.getTourDistances);
 router
   .route('/:id')
   .get(tourController.getTour)

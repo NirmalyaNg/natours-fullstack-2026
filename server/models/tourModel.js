@@ -131,6 +131,7 @@ const tourSchema = new mongoose.Schema(
 tourSchema.index({ price: 1, ratingsAverage: -1 });
 tourSchema.index({ ratingsAverage: -1 });
 tourSchema.index({ slug: 1 });
+tourSchema.index({ startLocation: '2dsphere' });
 
 const guidesPopulate = { path: 'guides', select: 'name email' };
 
@@ -172,13 +173,24 @@ tourSchema.pre(/^find/, function () {
 
 // Filter out secret tours for aggregations
 tourSchema.pre('aggregate', function () {
-  this.pipeline().unshift({
-    $match: {
-      isSecret: {
-        $ne: true,
+  const firstStage = this.pipeline()[0];
+  if ('$geoNear' in firstStage) {
+    this.pipeline().splice(1, 0, {
+      $match: {
+        isSecret: {
+          $ne: true,
+        },
       },
-    },
-  });
+    });
+  } else {
+    this.pipeline().unshift({
+      $match: {
+        isSecret: {
+          $ne: true,
+        },
+      },
+    });
+  }
 });
 
 // Create slug from tour name
