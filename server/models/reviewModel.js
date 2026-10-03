@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Tour = require('./tourModel');
 
 const reviewSchema = new mongoose.Schema(
   {
@@ -56,6 +57,51 @@ reviewSchema.pre(/^find/, function () {
 // Populate tour and user for reviews (creation/updation)
 reviewSchema.post('save', async function (doc) {
   await doc.populate(tourAndUserPopulates);
+});
+
+// Static method to calculate and save ratingsAverage and ratingsQuantity for a tour
+reviewSchema.statics.calculateReviewStats = async function (tourId) {
+  const reviewStats = await this.aggregate([
+    {
+      $match: {
+        tour: tourId,
+      },
+    },
+    {
+      $group: {
+        _id: null,
+        numRatings: {
+          $sum: 1,
+        },
+        avgRating: {
+          $avg: '$rating',
+        },
+      },
+    },
+  ]);
+  if (reviewStats.length) {
+    await Tour.findByIdAndUpdate(tourId, {
+      ratingsAverage: reviewStats[0].avgRating,
+      ratingsQuantity: reviewStats[0].numRatings,
+    });
+  } else {
+    await Tour.findByIdAndUpdate(tourId, {
+      ratingsAverage: 4.5,
+      ratingsQuantity: 0,
+    });
+  }
+};
+
+// Invoke static method to calculate and save ratingsAverage and ratingsQuantity for the associated tour when a review is deleted
+reviewSchema.post(/^findOneAnd/, async function (doc) {
+  const tourId = doc.tour._id ?? doc.tour;
+  await this.model.calculateReviewStats(tourId);
+});
+
+// Invoke static method to calculate and save ratingsAverage and ratingsQuantity for the associated tour when a review is created/updated
+reviewSchema.post('save', async function (doc) {
+  const tourId = doc.tour._id ?? doc.tour;
+  await doc.model().calculateReviewStats(tourId);
 });
 
 const Review = mongoose.model('Review', reviewSchema);
