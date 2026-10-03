@@ -1,9 +1,11 @@
 const express = require('express');
+const reviewRouter = require('../routes/reviewRoutes');
 const tourController = require('../controllers/tourController');
 const authController = require('../controllers/authController');
 
 const router = express.Router();
 
+router.use('/:id/reviews', reviewRouter);
 router
   .route('/')
   .get(tourController.getAllTours)
