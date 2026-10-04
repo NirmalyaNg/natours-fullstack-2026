@@ -13,7 +13,12 @@ router.patch('/resetPassword/:resetToken', authController.resetPassword);
 // protecte routes
 router.use(authController.protect);
 router.patch('/updateMyPassword', authController.updateMyPassword);
-router.patch('/updateMe', userController.uploadProfilePhoto, userController.updateMyProfile);
+router.patch(
+  '/updateMe',
+  userController.uploadProfilePhoto,
+  userController.resizeProfilePhoto,
+  userController.updateMyProfile,
+);
 router.delete('/deleteMe', userController.deleteMe);
 
 // protected routes + authorized for admins only

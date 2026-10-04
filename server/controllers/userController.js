@@ -3,6 +3,7 @@ const User = require('../models/userModel');
 const AppError = require('../utils/appError');
 const { getOne, getAll, createOne, updateOne, deleteOne } = require('./handlerFactory');
 const multer = require('multer');
+const sharp = require('sharp');
 
 const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
 
@@ -16,17 +17,7 @@ function filterUpdates(updates = {}, allowedUpdates = []) {
   return filteredUpdates;
 }
 
-const multerStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dest = path.join(__dirname, '../public/images/users');
-    cb(null, dest);
-  },
-  filename: (req, file, cb) => {
-    const ext = file.mimetype.split('/')[1];
-    const filename = `user-${req.user._id}-${Date.now()}.${ext}`;
-    cb(null, filename);
-  },
-});
+const multerStorage = multer.memoryStorage();
 
 const multerFilter = (req, file, cb) => {
   if (!allowedTypes.includes(file.mimetype)) {
@@ -39,8 +30,21 @@ const multerFilter = (req, file, cb) => {
 const upload = multer({
   storage: multerStorage,
   fileFilter: multerFilter,
-  limits: { fileSize: 2 * 1024 * 1024 },
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2Mb
 });
+
+exports.resizeProfilePhoto = async (req, res, next) => {
+  if (!req.file) return next();
+  req.file.filename = `user-${req.user._id}-${Date.now()}.jpeg`;
+  const filePath = path.join(__dirname, `../public/images/users/${req.file.filename}`);
+
+  await sharp(req.file.buffer)
+    .resize({ width: 400, height: 400 })
+    .toFormat('jpeg')
+    .jpeg({ quality: 90 })
+    .toFile(filePath);
+  next();
+};
 
 exports.uploadProfilePhoto = upload.single('photo');
 
