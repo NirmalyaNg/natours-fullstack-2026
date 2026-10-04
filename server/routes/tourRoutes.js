@@ -23,7 +23,13 @@ router.get('/tour-distances/center/:latlong/unit/:unit', tourController.getTourD
 router
   .route('/:id')
   .get(tourController.getTour)
-  .patch(authController.protect, authController.authorize('admin', 'lead-guide'), tourController.updateTour)
+  .patch(
+    authController.protect,
+    authController.authorize('admin', 'lead-guide'),
+    tourController.uploadTourImages,
+    tourController.resizeTourImages,
+    tourController.updateTour,
+  )
   .delete(authController.protect, authController.authorize('admin', 'lead-guide'), tourController.deleteTour);
 
 module.exports = router;

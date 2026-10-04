@@ -5,7 +5,7 @@ const { getOne, getAll, createOne, updateOne, deleteOne } = require('./handlerFa
 const multer = require('multer');
 const sharp = require('sharp');
 
-const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
 function filterUpdates(updates = {}, allowedUpdates = []) {
   const filteredUpdates = {};
@@ -21,7 +21,7 @@ const multerStorage = multer.memoryStorage();
 
 const multerFilter = (req, file, cb) => {
   if (!allowedTypes.includes(file.mimetype)) {
-    cb(new AppError('Selected file should be an image(jpg/png/jpeg/webp)', 400), false);
+    cb(new AppError('Selected file should be an image(png/jpeg/webp)', 400), false);
   } else {
     cb(null, true);
   }
