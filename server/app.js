@@ -1,3 +1,4 @@
+const path = require('node:path');
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
@@ -49,6 +50,7 @@ app.set('query parser', (str) =>
 );
 
 // Middlewares
+app.use(express.static(path.join(__dirname, './public')));
 app.use(helmet());
 app.use(cors());
 if (process.env.NODE_ENV === 'development') {

@@ -22,6 +22,10 @@ function handleJsonWebTokenError(error) {
   return new AppError('Token is invalid. Please provide valid token', 401);
 }
 
+function handleMulterError(error) {
+  return new AppError(error.message, 400);
+}
+
 function sendErrorDev(error, res) {
   res.status(error.statusCode).json({
     status: error.status,
@@ -66,6 +70,9 @@ module.exports = (error, req, res, next) => {
     }
     if (error.name === 'JsonWebTokenError') {
       err = handleJsonWebTokenError(error);
+    }
+    if (error.name === 'MulterError') {
+      err = handleMulterError(error);
     }
     sendErrorProd(err ?? error, res);
   } else {
