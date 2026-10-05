@@ -3,7 +3,7 @@ const { refreshTokenExpiryDays } = require('../config/auth');
 const User = require('../models/userModel');
 const AppError = require('../utils/appError');
 const jwt = require('jsonwebtoken');
-const sendEmail = require('../utils/email');
+const Email = require('../utils/email');
 
 exports.protect = async function (req, res, next) {
   if (!req.headers.authorization || !req.headers.authorization.startsWith('Bearer ')) {
@@ -60,6 +60,8 @@ exports.signup = async function (req, res, next) {
   };
 
   const newUser = await User.create(userDetails);
+  const url = `${req.protocol}://${req.get('host')}/api/v1/users/me`;
+  await new Email(newUser, url).sendWelcome();
   generateAndSendTokens(newUser, res, 201);
 };
 
@@ -109,13 +111,9 @@ exports.forgotPassword = async function (req, res, next) {
   const passwordResetToken = existingUser.generatePasswordResetToken();
   await existingUser.save({ validateBeforeSave: false });
 
-  const passwordResetUrl = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${passwordResetToken}`;
   try {
-    await sendEmail({
-      subject: 'Your password reset url(Valid for 10 minutes)',
-      text: `Forgot your password? Please send a PATCH request to ${passwordResetUrl} with your new password and confirm password. If you did not request for a new password please ignore this email.`,
-      email,
-    });
+    const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/resetPassword/${passwordResetToken}`;
+    await new Email(existingUser, resetURL).sendPasswordReset();
     res.status(200).json({
       status: 'success',
       data: { message: 'If an account exists for this email, a reset link has been sent.' },

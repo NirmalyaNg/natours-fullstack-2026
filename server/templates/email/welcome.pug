@@ -1,0 +1,15 @@
+extends _baseEmail
+
+block content
+  p Hi #{firstName},
+  p Welcome to Natours! We're really happy to have you with us.
+  p Take a moment to complete your profile and add a photo, so your guides know who to look out for on your first tour.
+  table(role='presentation' cellpadding='0' cellspacing='0')
+    tr
+      td
+        a.btn(href=url target='_blank') Complete your profile
+  p
+  p If you have any questions about booking a tour, just reply to this email.
+  p Happy travels,
+    br
+    | Nirmalya

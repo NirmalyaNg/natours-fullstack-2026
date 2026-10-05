@@ -3,7 +3,7 @@ const nodemailer = require('nodemailer');
 const pug = require('pug');
 const htmlToText = require('html-to-text');
 
-class Email {
+module.exports = class Email {
   constructor(user, url) {
     this.firstName = user.name.split(' ')[0];
     this.to = user.email;
@@ -13,7 +13,13 @@ class Email {
 
   createNewTransport() {
     if (process.env.NODE_ENV === 'production') {
-      return 1;
+      return nodemailer.createTransport({
+        service: 'gmail', // Use gmail directly since brevo doesn't allow free email service providers
+        auth: {
+          user: process.env.GMAIL_USER,
+          pass: process.env.GMAIL_APP_PASSWORD,
+        },
+      });
     } else {
       return nodemailer.createTransport({
         host: process.env.EMAIL_HOST,
@@ -27,7 +33,7 @@ class Email {
   }
 
   async send(templateName, subject) {
-    const html = pug.renderFile(path.join(__dirname, `../templates/${templateName}.pug`), {
+    const html = pug.renderFile(path.join(__dirname, `../templates/email/${templateName}.pug`), {
       firstName: this.firstName,
       url: this.url,
       subject,
@@ -48,13 +54,8 @@ class Email {
   async sendWelcome() {
     await this.send('welcome', "Welcome to the Natours' family!");
   }
-}
 
-module.exports = async function sendEmail(options) {
-  await transport.sendMail({
-    from: `Nirmalya Ganguly <${process.env.EMAIL_FROM}>`,
-    to: options.email,
-    subject: options.subject,
-    text: options.text,
-  });
+  async sendPasswordReset() {
+    await this.send('passwordReset', 'Your password reset link (valid for 10 minutes)');
+  }
 };
